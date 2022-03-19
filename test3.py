@@ -1,0 +1,23 @@
+from mock_data import catalog
+import json
+
+def lower_than(price):
+
+    count = 0
+
+    for x in catalog:
+        if x['price'] < price:
+            count +=1
+    return count
+
+def greater_than(price):
+
+    count = 0
+
+    for x in catalog:
+        if x['price'] > price:
+            count +=1
+    return count
+
+print(lower_than(17))
+print(greater_than(5))
