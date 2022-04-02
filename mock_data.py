@@ -2,10 +2,10 @@
 catalog = [
     {
         "_id" : 'fadsfa',
-        "title" : 'Black Split Hem',
+        "title" : 'Black Split',
         "price" : 22.99,
         "stock" : 23,
-        "category" : 'short sleeve',
+        "category" : 'short_sleeve',
         "image" : 'black-split-hem.jpeg'
     },
     {
@@ -13,7 +13,7 @@ catalog = [
         "title" : 'Cab Split Hem',
         "price" : 25.93,
         "stock" : 2,
-        "category" : 'short sleeve',
+        "category" : 'short_sleeve',
         "image" : 'cabernet-split-hem.jpeg'
     },
     {
@@ -21,7 +21,7 @@ catalog = [
         "title" : 'White Crew Hem',
         "price" : 32.99,
         "stock" : 5,
-        "category" : 'long sleeve',
+        "category" : 'long_sleeve',
         "image" : 'WHITE-CREW-SPLIT-HEM.jpeg'
     },
     {
@@ -29,7 +29,7 @@ catalog = [
         "title" : 'White Crew',
         "price" : 22.99,
         "stock" : 3,
-        "category" : 'long sleeve',
+        "category" : 'long_sleeve',
         "image" : 'WHITE-LS-CREW-CURVE-HEM.jpeg'
     },
     {
@@ -37,7 +37,7 @@ catalog = [
         "title" : 'Desert Split Hem',
         "price" : 52.99,
         "stock" : 230,
-        "category" : 'short sleeve',
+        "category" : 'short_sleeve',
         "image" : 'desert.jpeg'
     },
 ]
