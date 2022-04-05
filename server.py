@@ -8,8 +8,12 @@ from mock_data import catalog
 from random import randint
 from dotenv import load_dotenv
 import os
+from bson import ObjectId
+load_dotenv()
 
+from config import db
 
+url = str(os.getenv('mongo_url'))
 app = Flask('Server')
 
 
@@ -17,55 +21,64 @@ app = Flask('Server')
 def index():
     return 'hello from flask'
 
-# @app.route('/me')
-# def about_me():
-#     return 'Phil Chaplin'
 
 @app.route('/api/catalog', methods = ['get'])
 def get_catalog():
-    return json.dumps(catalog)
+    products = []
+    cur = list(db.products.find({}))
+
+    for prod in cur:
+        prod['_id'] = str(prod['_id'])
+        products.append(prod)
+    return json.dumps(products)
 
 
 @app.route('/api/save_prod', methods = ['post'])
 def save_product():
     product = request.get_json()
-    product['_id'] = random_with_N_digits(8)
-    print(product)
-    catalog.append(product)
+    db.products.insert_one(product)
+    #fix_id
+    product['_id'] = str(product['_id'])
     return json.dumps(product)
 
 
 
 @app.route('/api/catalog/count', methods = ['get'])
 def num_products():
-    return json.dumps(len(catalog))
+    cur = list(db.products.find({}))
+    return json.dumps(len(cur))
 
 
 @app.route('/api/catalog/total', methods = ['get'])
 def total_products():
+    cur = list(db.products.find({}))
     total = 0
-    for x in catalog:
+    for x in cur:
         total += x['price']
     return json.dumps(total)
 
 
-@app.route('/api/about', methods = ['get'])
-def about_me():
-    about_message = 'this is the about page'
-    return json.dumps(about_message)
+
+
 
 @app.route('/api/catalog/<id>', methods = ['get'])
 def get_by_id(id):
     try:
-        return json.dumps([x for x in catalog if x['_id'] == id][0])
+        prod = db.products.find_one({'_id' : ObjectId(id)})
+        prod['_id'] = str(prod["_id"])
+        return json.dumps(prod)
     except Exception as e:
-        return 'id doesnt exist'
+        return f'id doesnt exist: {e}'
+
+
+
 
 @app.route('/api/catalog/most_expensive', methods = ['get'])
 def most_expensive():
+    cur = list(db.products.find({}))
     max_price = 0
-    prod_name = catalog[0]['title']
-    for x in catalog:
+    prod_name = cur[0]['title']
+    for x in cur:
         if x['price'] > max_price:
             max_price = x['price']
             prod_name = x['title']
@@ -73,17 +86,20 @@ def most_expensive():
 
 @app.route('/api/catalog/least_expensive', methods = ['get'])
 def least_expensive():
-    min_price = catalog[0]['price']
-    prod_name = catalog[0]['title']
-    for x in catalog:
+    cur = list(db.products.find({}))
+
+    min_price = cur[0]['price']
+    prod_name = cur[0]['title']
+    for x in cur:
         if x['price'] < min_price:
             prod_name = x['title']
     return json.dumps(prod_name)
 
 @app.route('/api/catalog/category', methods = ['get'])
 def by_category():
+    cur = list(db.products.find({}))
     cats = []
-    for x in catalog:
+    for x in cur:
         if x['category'] not in cats:
             cats.append(x['category'])
     return json.dumps(cats)
@@ -104,15 +120,20 @@ def by_category():
 
 @app.route('/api/catalog/category/<category>', methods = ['get'])
 def find_by_cat(category):
-    return json.dumps([x['title'] for x in catalog if x['category'] == category] )
+    cat = []
+    for prod in db.products.find({'category' : category}):
+        prod['_id'] = str(prod['_id'])
+        cat.append(prod)
+    return json.dumps(cat)
 
 
 @app.route('/api/someNumbers', methods = ['get'])
 def someNumbers():
     return json.dumps([x for x in range(1,51)] )
 
-
-
+# =========================================================================
+# ================================Coupons================================
+# =========================================================================
 
 
 allCoupons = []
@@ -120,24 +141,25 @@ allCoupons = []
 @app.route('/api/save_coupon', methods = ['get', 'post'])
 def save_coupon():
     if request.method == 'POST':
-        coup = request.get_json()
-        coup['_id'] = random_with_N_digits(8)
-        allCoupons.append(coup)
-        return json.dumps(coup)
+        coupon = request.get_json()
+        db.coupons.insert_one(coupon)
+        #fix_id
+        coupon['_id'] = str(coupon['_id'])
+        return json.dumps(coupon)
     else:
-        return json.dumps(allCoupons)
+        cur = list()
+        for prod in db.coupons.find({}): 
+            prod['_id'] = str(prod['_id'])
+            cur.append(prod)
+            return json.dumps(cur)
 
-# sets _id for coupons and prods
-ids = []
-def random_with_N_digits(n):
-    range_start = 10**(n-1)
-    range_end = (10**n)-1
-    new_id = randint(range_start, range_end)
-    if new_id not in ids:
-        ids.append(new_id)
-        return new_id
-    else:
-        random_with_N_digits(8)
 
-print(random_with_N_digits(8))
+
+@app.route('/api/coupons/<code>', methods = ['get'])
+def find_by_code(code):
+
+    coup =  db.coupons.find_one({'code' : code})
+    coup['_id'] = str(coup['_id'])
+    return json.dumps(coup)
+
 app.run(debug=True)
