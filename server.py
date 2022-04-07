@@ -142,8 +142,14 @@ allCoupons = []
 def save_coupon():
     if request.method == 'POST':
         coupon = request.get_json()
-        db.coupons.insert_one(coupon)
+
+        if not 'code' in coupon or len(coupon['code']) < 5:
+            return abort(400, 'coupon code must be at least 5 characters')
+
+        if not 'discount' in coupon or coupon['discount'] < 5 or coupon['discount'] > 50:
+            return abort(400, 'discount can not be lower than 5 percent or higher than 50')
         #fix_id
+        db.coupons.insert_one(coupon)
         coupon['_id'] = str(coupon['_id'])
         return json.dumps(coupon)
     else:
@@ -151,7 +157,7 @@ def save_coupon():
         for prod in db.coupons.find({}): 
             prod['_id'] = str(prod['_id'])
             cur.append(prod)
-            return json.dumps(cur)
+        return json.dumps(cur)
 
 
 
@@ -162,4 +168,62 @@ def find_by_code(code):
     coup['_id'] = str(coup['_id'])
     return json.dumps(coup)
 
+
+
+
+
+# =========================================================================
+# ===============================Users================================
+# =========================================================================
+
+@app.route('/api/user', methods = ['get', 'post'])
+def user():
+    if request.method == 'POST':
+        user = request.get_json()
+        if not 'username' in user or len(user['username']) < 1 :
+            return abort(400, 'must have username')
+        if not 'email' in user or len(user['email']) < 1 :
+            return abort(400, 'must have email')
+        if not 'password' in user or len(user['password'] < 1):
+            return abort(400, 'must have password')
+        if not 'first' in user or len(user['first']) < 1:
+            return abort(400, 'must have first name')
+        if not 'last' in user or len(user['last']) < 1:
+            return abort(400, 'must have last name')
+
+        db.users.insert_one(user)
+        user['_id'] = str(user['_id'])
+        return json.dumps(user)
+    elif request.method == 'GET':
+        users = list()
+        for user in db.users.find({}):
+            user['_id'] = str(user['_id'])
+            users.append(user)
+        return json.dumps(users)
+
+@app.route('/api/user/<email>', methods = ['get'])
+def get_user(email):
+    user = db.users.find_one({'email':email})
+    user['_id'] = str(user['_id'])
+    return json.dumps(user)
+
+
+
+
+@app.route('/api/login', methods = ['post'])
+def validate_user_data():
+    data = request.get_json()
+
+    if not 'username' in data:
+        return abort(400, 'no key user')
+    if not 'password' in data:
+        return abort(400, 'no key password')
+
+    user = db.users.find_one({"username": data['username'], "password" : data['password']})
+    if not user:
+        return abort(401, "user not found")
+    else:
+        user['_id'] = str(user['_id'])
+        user.pop('password')
+        return json.dumps(user)
 app.run(debug=True)
