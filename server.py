@@ -1,21 +1,19 @@
-
 import json
 from nis import cat
-import random
 from flask import Flask, request, redirect, session, abort
 from flask.templating import render_template
 from mock_data import catalog
-from random import randint
 from dotenv import load_dotenv
 import os
 from bson import ObjectId
+from flask_cors import CORS
 load_dotenv()
 
 from config import db
 
 url = str(os.getenv('mongo_url'))
 app = Flask('Server')
-
+CORS(app)
 
 @app.route('/')
 def index():
@@ -142,11 +140,13 @@ allCoupons = []
 def save_coupon():
     if request.method == 'POST':
         coupon = request.get_json()
-
         if not 'code' in coupon or len(coupon['code']) < 5:
+            print('code error')
             return abort(400, 'coupon code must be at least 5 characters')
 
-        if not 'discount' in coupon or coupon['discount'] < 5 or coupon['discount'] > 50:
+        if not 'discount' in coupon or int(coupon['discount']) < 5 or int(coupon['discount']) > 50:
+            print('discount error')
+
             return abort(400, 'discount can not be lower than 5 percent or higher than 50')
         #fix_id
         db.coupons.insert_one(coupon)
